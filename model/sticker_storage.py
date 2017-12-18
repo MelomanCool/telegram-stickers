@@ -85,7 +85,6 @@ class SqliteStickerStorage(StickerStorage):
             'CREATE TABLE IF NOT EXISTS stickers ('
             ' id         INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,'
             ' file_id    TEXT NOT NULL UNIQUE,'
-            ' name	     TEXT NOT NULL,'
             ' owner_id   INTEGER NOT NULL,'
             ' times_used INTEGER NOT NULL DEFAULT 0'
             ')'
@@ -95,8 +94,8 @@ class SqliteStickerStorage(StickerStorage):
 
         with self.connection:
             self.connection.execute(
-                'INSERT INTO stickers (file_id, name, owner_id, times_used)'
-                ' VALUES (:file_id, :name, :owner_id, :times_used)',
+                'INSERT INTO stickers (file_id, owner_id, times_used)'
+                ' VALUES (:file_id, :owner_id, :times_used)',
                 new_sticker._asdict())
 
     def delete_by_file_id(self, file_id, from_user_id):
