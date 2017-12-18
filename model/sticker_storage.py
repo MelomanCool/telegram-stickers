@@ -176,7 +176,7 @@ class SqliteStickerStorage(StickerStorage):
             ' WHERE owner_id = :owner_id'
             ' LIMIT :max_count',
             {'owner_id': owner_id, 'max_count': max_count}
-        )
+        ).fetchall()
 
         return [Sticker(**r) for r in rows]
 
