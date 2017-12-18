@@ -27,6 +27,14 @@ class StickerStorage(ABC):
         pass
 
     @abstractmethod
+    def add_tags(self, sticker_id, tags):
+        pass
+
+    @abstractmethod
+    def add_tags_by_file_id(self, file_id, tags):
+        pass
+
+    @abstractmethod
     def delete_by_file_id(self, file_id, from_user_id):
         """Delete a sticker by file_id"""
         pass
@@ -112,12 +120,20 @@ class SqliteStickerStorage(StickerStorage):
                 (file_id, owner_id)
             ).lastrowid
 
+        self.add_tags(sticker_id, tags)
+
+    def add_tags(self, sticker_id, tags):
+        with self.connection:
             for tag in tags:
                 self.connection.execute(
                     'INSERT INTO tags (sticker_id, name)'
                     ' VALUES (?, ?)',
                     (sticker_id, tag)
                 )
+
+    def add_tags_by_file_id(self, file_id, tags):
+        sticker = self.get_by_file_id(file_id)
+        self.add_tags(sticker.id, tags)
 
     def delete_by_file_id(self, file_id, from_user_id):
         if from_user_id != self.get_by_file_id(file_id).owner_id:
