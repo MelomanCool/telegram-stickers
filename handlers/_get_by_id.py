@@ -4,12 +4,12 @@ sticker_storage = model.get_storage()
 
 
 def get_by_id(_, update, groupdict):
-    """Sends meme by id"""
+    """Sends sticker by id"""
 
     try:
-        meme = sticker_storage.get(groupdict['id'])
+        sticker = sticker_storage.get(groupdict['id'])
     except KeyError:
-        update.message.reply_text("I don't have meme with that ID, sorry")
+        update.message.reply_text("I don't have sticker with that ID, sorry")
         return
 
-    update.message.reply_voice(meme.file_id)
+    update.message.reply_sticker(sticker.file_id)
