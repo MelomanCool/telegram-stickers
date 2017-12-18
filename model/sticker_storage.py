@@ -1,11 +1,14 @@
 import logging
+import re
 import sqlite3
 from abc import ABC, abstractmethod
 from typing import List
 
 import config
-from .sticker import Sticker
+from tag_search import find_stickers
 from .exceptions import Unauthorized
+from .sticker import Sticker
+from .tagged_sticker import TaggedSticker
 
 
 logger = logging.getLogger(__name__)
@@ -67,6 +70,10 @@ class StickerStorage(ABC):
         pass
 
     @abstractmethod
+    def get_all_tagged(self) -> List[TaggedSticker]:
+        pass
+
+    @abstractmethod
     def get_tags(self, sticker_id) -> List[str]:
         pass
 
@@ -83,7 +90,12 @@ class StickerStorage(ABC):
         pass
 
     def find(self, search_query: str, max_count) -> List[Sticker]:
-        raise NotImplementedError
+        query_tags = re.split('\s+', search_query)
+        return find_stickers(
+            query_tags,
+            self.get_all_tagged(),
+            max_count
+        )
 
 
 class SqliteStickerStorage(StickerStorage):
@@ -208,6 +220,16 @@ class SqliteStickerStorage(StickerStorage):
             (sticker_id,)
         )
         return [row['name'] for row in rows]
+
+    def get_all_tagged(self) -> List[TaggedSticker]:
+        stickers = self.get_all()
+        return [
+            TaggedSticker(
+                **sticker._asdict(),
+                tags=self.get_tags(sticker.id)
+            )
+            for sticker in stickers
+        ]
 
     def inc_times_used(self, sticker_id):
         with self.connection:
