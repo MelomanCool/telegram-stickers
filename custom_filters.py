@@ -10,7 +10,7 @@ class IsInDatabase(BaseFilter):
 
     def filter(self, message):
         return (message.voice is not None
-                and self.storage.has_meme_with_file_id(message.voice.file_id))
+                and self.storage.has_sticker_with_file_id(message.voice.file_id))
 
 
 class IsAudioDocument(BaseFilter):

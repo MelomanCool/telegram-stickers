@@ -5,7 +5,7 @@ from telegram.ext import ConversationHandler, MessageHandler, Filters, CommandHa
 import model
 from converter import convert_to_ogg
 from custom_filters import is_in_database, is_audio_document
-from model import Meme
+from model import Sticker
 from utils import download_file
 
 
@@ -49,7 +49,7 @@ def name_handler(_, update, user_data):
     meme_name = message.text.strip()
     file_id = user_data['meme_file_id']
 
-    meme = Meme(
+    meme = Sticker(
         id=None,  # automatically created by DB
         name=meme_name,
         file_id=file_id,

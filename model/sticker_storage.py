@@ -3,10 +3,8 @@ import sqlite3
 from abc import ABC, abstractmethod
 from typing import List
 
-from fuzzywuzzy import fuzz, process
-
 import config
-from .meme import Meme
+from .sticker import Sticker
 from .exceptions import Unauthorized
 
 
@@ -19,54 +17,50 @@ _storage = None
 def get_storage():
     global _storage
     if not _storage:
-        _storage = SqliteMemeStorage(config.DB_PATH)
+        _storage = SqliteStickerStorage(config.DB_PATH)
     return _storage
 
 
-class MemeStorage(ABC):
+class StickerStorage(ABC):
 
     @abstractmethod
-    def add(self, new_meme: Meme):
+    def add(self, new_sticker: Sticker):
         pass
 
     @abstractmethod
     def delete_by_file_id(self, file_id, from_user_id):
-        """Delete a meme by file_id or a Meme object"""
+        """Delete a sticker by file_id"""
         pass
 
     @abstractmethod
-    def rename(self, meme_id, new_name, from_user_id):
+    def get(self, sticker_id) -> Sticker:
+        """Get a sticker by it's id"""
         pass
 
     @abstractmethod
-    def get(self, meme_id) -> Meme:
-        """Get a meme by it's id"""
+    def get_by_file_id(self, file_id) -> Sticker:
+        """Get a sticker by it's file_id"""
         pass
 
     @abstractmethod
-    def get_by_file_id(self, file_id) -> Meme:
-        """Get a meme by it's file_id"""
+    def get_for_owner(self, owner_id, max_count) -> List[Sticker]:
         pass
 
     @abstractmethod
-    def get_for_owner(self, owner_id, max_count) -> List[Meme]:
+    def get_most_popular(self, max_count) -> List[Sticker]:
         pass
 
     @abstractmethod
-    def get_most_popular(self, max_count) -> List[Meme]:
-        pass
-
-    @abstractmethod
-    def get_many(self, max_count) -> List[Meme]:
+    def get_many(self, max_count) -> List[Sticker]:
         pass
 
     @abstractmethod
     def get_all(self):
-        """Returns all memes"""
+        """Returns all stickers"""
         pass
 
     @abstractmethod
-    def inc_times_used(self, meme_id):
+    def inc_times_used(self, sticker_id):
         pass
 
     @abstractmethod
@@ -74,33 +68,21 @@ class MemeStorage(ABC):
         pass
 
     @abstractmethod
-    def has_meme_with_file_id(self, file_id) -> bool:
+    def has_sticker_with_file_id(self, file_id) -> bool:
         pass
 
-    def find(self, search_query: str, max_count) -> List[Meme]:
-        scored_matches = process.extractBests(
-            search_query, self.get_all(),
-            key=lambda meme: meme.name,
-            scorer=fuzz.UWRatio,
-            limit=None,
-            score_cutoff=55
-        )
-
-        if scored_matches:
-            matches, _ = zip(*scored_matches)
-            return matches[-max_count:]
-        else:
-            return []
+    def find(self, search_query: str, max_count) -> List[Sticker]:
+        raise NotImplementedError
 
 
-class SqliteMemeStorage(MemeStorage):
+class SqliteStickerStorage(StickerStorage):
 
     def __init__(self, filename):
         self.connection = sqlite3.connect(filename, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
 
         self.connection.execute(
-            'CREATE TABLE IF NOT EXISTS memes ('
+            'CREATE TABLE IF NOT EXISTS stickers ('
             ' id         INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,'
             ' file_id    TEXT NOT NULL UNIQUE,'
             ' name	     TEXT NOT NULL,'
@@ -109,13 +91,13 @@ class SqliteMemeStorage(MemeStorage):
             ')'
         )
 
-    def add(self, new_meme: Meme):
+    def add(self, new_sticker: Sticker):
 
         with self.connection:
             self.connection.execute(
-                'INSERT INTO memes (file_id, name, owner_id, times_used)'
+                'INSERT INTO stickers (file_id, name, owner_id, times_used)'
                 ' VALUES (:file_id, :name, :owner_id, :times_used)',
-                new_meme._asdict())
+                new_sticker._asdict())
 
     def delete_by_file_id(self, file_id, from_user_id):
         if from_user_id != self.get_by_file_id(file_id).owner_id:
@@ -123,38 +105,26 @@ class SqliteMemeStorage(MemeStorage):
 
         with self.connection:
             self.connection.execute(
-                'DELETE FROM memes '
+                'DELETE FROM stickers '
                 ' WHERE file_id = ?',
                 (file_id,)
             )
 
-    def rename(self, meme_id, new_name, from_user_id):
-        if from_user_id != self.get(meme_id).owner_id:
-            raise Unauthorized
-
-        with self.connection:
-            self.connection.execute(
-                'UPDATE memes'
-                ' SET name = :new_name'
-                ' WHERE id = :id',
-                {'new_name': new_name, 'id': meme_id}
-            )
-
-    def get(self, meme_id) -> Meme:
+    def get(self, sticker_id) -> Sticker:
         row = self.connection.execute(
-            'SELECT * FROM memes'
+            'SELECT * FROM stickers'
             ' WHERE id = ?',
-            (meme_id,)
+            (sticker_id,)
         ).fetchone()
 
         if row is None:
             raise KeyError
 
-        return Meme(**row)
+        return Sticker(**row)
 
-    def get_by_file_id(self, file_id) -> Meme:
+    def get_by_file_id(self, file_id) -> Sticker:
         row = self.connection.execute(
-            'SELECT * FROM memes'
+            'SELECT * FROM stickers'
             ' WHERE file_id = ?',
             (file_id, )
         ).fetchone()
@@ -162,46 +132,46 @@ class SqliteMemeStorage(MemeStorage):
         if row is None:
             raise KeyError
 
-        return Meme(**row)
+        return Sticker(**row)
 
-    def get_for_owner(self, owner_id, max_count) -> List[Meme]:
+    def get_for_owner(self, owner_id, max_count) -> List[Sticker]:
         rows = self.connection.execute(
-            'SELECT * FROM memes'
+            'SELECT * FROM stickers'
             ' WHERE owner_id = :owner_id'
             ' LIMIT :max_count',
             {'owner_id': owner_id, 'max_count': max_count}
         )
 
-        return [Meme(**r) for r in rows]
+        return [Sticker(**r) for r in rows]
 
-    def get_most_popular(self, max_count) -> List[Meme]:
+    def get_most_popular(self, max_count) -> List[Sticker]:
         rows = self.connection.execute(
-            'SELECT * FROM memes'
+            'SELECT * FROM stickers'
             ' ORDER BY times_used DESC'
             ' LIMIT ?',
             (max_count,)
         ).fetchall()
-        return [Meme(**r) for r in rows]
+        return [Sticker(**r) for r in rows]
 
-    def get_many(self, max_count) -> List[Meme]:
+    def get_many(self, max_count) -> List[Sticker]:
         rows = self.connection.execute(
-            'SELECT * FROM memes'
+            'SELECT * FROM stickers'
             ' LIMIT ?',
             (max_count,)
         ).fetchall()
-        return [Meme(**r) for r in rows]
+        return [Sticker(**r) for r in rows]
 
     def get_all(self):
-        rows = self.connection.execute('SELECT * FROM memes').fetchall()
-        return [Meme(**r) for r in rows]
+        rows = self.connection.execute('SELECT * FROM stickers').fetchall()
+        return [Sticker(**r) for r in rows]
 
-    def inc_times_used(self, meme_id):
+    def inc_times_used(self, sticker_id):
         with self.connection:
             self.connection.execute(
-                'UPDATE memes'
+                'UPDATE stickers'
                 ' SET times_used = times_used + 1'
                 ' WHERE id = ?',
-                (meme_id,)
+                (sticker_id,)
             )
 
     def replace_file_id(self, old_file_id, new_file_id, from_user_id):
@@ -209,16 +179,16 @@ class SqliteMemeStorage(MemeStorage):
             raise Unauthorized
 
         self.connection.execute(
-            'UPDATE memes'
+            'UPDATE stickers'
             ' SET file_id = :new_file_id'
             ' WHERE file_id = :old_file_id',
             {'new_file_id': new_file_id, 'old_file_id': old_file_id}
         )
 
-    def has_meme_with_file_id(self, file_id) -> bool:
+    def has_sticker_with_file_id(self, file_id) -> bool:
         row = self.connection.execute(
             'SELECT EXISTS('
-            ' SELECT 1 FROM memes'
+            ' SELECT 1 FROM stickers'
             ' WHERE file_id = ?'
             ')',
             (file_id,)
