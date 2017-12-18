@@ -2,7 +2,7 @@ import model
 from model.exceptions import Unauthorized
 from utils import inject_quoted_voice_id
 
-meme_storage = model.get_storage()
+sticker_storage = model.get_storage()
 
 
 @inject_quoted_voice_id
@@ -18,13 +18,13 @@ def rename(_, update, args, quoted_voice_id):
         return
 
     try:
-        meme = meme_storage.get_by_file_id(quoted_voice_id)
+        meme = sticker_storage.get_by_file_id(quoted_voice_id)
     except KeyError:
         message.reply_text("Sorry, I don't know that meme.")
         return
 
     try:
-        meme_storage.rename(meme.id, new_name, message.from_user.id)
+        sticker_storage.rename(meme.id, new_name, message.from_user.id)
     except Unauthorized:
         message.reply_text("Sorry, you can only rename the memes you added yourself.")
         return

@@ -2,7 +2,7 @@ import model
 from model.exceptions import Unauthorized
 from utils import inject_quoted_voice_id
 
-meme_storage = model.get_storage()
+sticker_storage = model.get_storage()
 
 
 @inject_quoted_voice_id
@@ -12,13 +12,13 @@ def delete(_, update, quoted_voice_id):
     message = update.message
 
     try:
-        meme_name = meme_storage.get_by_file_id(quoted_voice_id).name
+        meme_name = sticker_storage.get_by_file_id(quoted_voice_id).name
     except KeyError:
         message.reply_text("I don't know that meme, sorry.")
         return
 
     try:
-        meme_storage.delete_by_file_id(quoted_voice_id, message.from_user.id)
+        sticker_storage.delete_by_file_id(quoted_voice_id, message.from_user.id)
     except Unauthorized:
         message.reply_text("Sorry, you can only delete the memes you added yourself.")
         return

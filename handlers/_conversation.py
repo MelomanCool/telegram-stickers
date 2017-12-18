@@ -12,7 +12,7 @@ from utils import download_file
 States = Enum('States', 'NAME')
 
 
-meme_storage = model.get_storage()
+sticker_storage = model.get_storage()
 
 
 def cmd_cancel(_, update):
@@ -57,7 +57,7 @@ def name_handler(_, update, user_data):
         times_used=0
     )
 
-    meme_storage.add(meme)
+    sticker_storage.add(meme)
     message.reply_text('Meme has been added.')
 
     return ConversationHandler.END
