@@ -10,12 +10,12 @@ def download_file(bot, file_id):
     return f
 
 
-def inject_quoted_voice_id(func):
+def inject_quoted_sticker_id(func):
     @wraps(func)
     def wrapped(bot, update, *args, **kwargs):
         quoted_message = update.message.reply_to_message
-        if not quoted_message or not quoted_message.voice:
-            update.message.reply_text('You should reply to a meme with this command.')
+        if not quoted_message or not quoted_message.sticker:
+            update.message.reply_text('You should reply to a sticker with this command.')
             return
-        return func(bot, update, *args, quoted_voice_id=quoted_message.voice.file_id, **kwargs)
+        return func(bot, update, *args, quoted_sticker_id=quoted_message.sticker.file_id, **kwargs)
     return wrapped
