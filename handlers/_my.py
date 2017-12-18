@@ -4,18 +4,21 @@ sticker_storage = model.get_storage()
 
 
 def my(_, update):
-    """Prints memes added by user"""
+    """Prints stickers added by user"""
 
     message = update.message
     user_id = update.message.from_user.id
 
-    memes = sticker_storage.get_for_owner(user_id, max_count=20)
+    stickers = sticker_storage.get_for_owner(user_id, max_count=20)
 
     text = '\n\n'.join(
-        '<b>{meme.name}</b>\n'
-        'Times used: {meme.times_used}\n'
-        '/{meme.id}'
-        .format(meme=meme)
-        for meme in memes
+        'Tags: {tags}\n'
+        'Times used: {sticker.times_used}\n'
+        '/{sticker.id}'
+        .format(
+            sticker=sticker,
+            tags=', '.join(sticker_storage.get_tags(sticker.id))
+        )
+        for sticker in stickers
     )
     message.reply_text(text, parse_mode='HTML')
