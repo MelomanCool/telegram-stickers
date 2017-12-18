@@ -10,7 +10,6 @@ from .exceptions import Unauthorized
 
 logger = logging.getLogger(__name__)
 
-
 _storage = None
 
 
@@ -24,7 +23,7 @@ def get_storage():
 class StickerStorage(ABC):
 
     @abstractmethod
-    def add(self, new_sticker: Sticker):
+    def add(self, file_id, tags, owner_id):
         pass
 
     @abstractmethod
@@ -89,14 +88,32 @@ class SqliteStickerStorage(StickerStorage):
             ' times_used INTEGER NOT NULL DEFAULT 0'
             ')'
         )
+        self.connection.execute(
+            'CREATE TABLE IF NOT EXISTS tags ('
+            ' id         INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,'
+            ' sticker_id INTEGER NOT NULL,'
+            ' name       TEXT NOT NULL,'
+            ' FOREIGN KEY(sticker_id)'
+            '  REFERENCES stickers(id)'
+            '  ON DELETE CASCADE'
+            ')'
+        )
 
-    def add(self, new_sticker: Sticker):
+    def add(self, file_id, tags, owner_id):
 
         with self.connection:
-            self.connection.execute(
-                'INSERT INTO stickers (file_id, owner_id, times_used)'
-                ' VALUES (:file_id, :owner_id, :times_used)',
-                new_sticker._asdict())
+            sticker_id = self.connection.execute(
+                'INSERT INTO stickers (file_id, owner_id)'
+                ' VALUES (?, ?)',
+                (file_id, owner_id)
+            ).lastrowid
+
+            for tag in tags:
+                self.connection.execute(
+                    'INSERT INTO tags (sticker_id, name)'
+                    ' VALUES (?, ?)',
+                    (sticker_id, tag)
+                )
 
     def delete_by_file_id(self, file_id, from_user_id):
         if from_user_id != self.get_by_file_id(file_id).owner_id:

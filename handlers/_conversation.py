@@ -1,15 +1,15 @@
+import re
 from enum import Enum
 
+import logzero
 from telegram.ext import ConversationHandler, MessageHandler, Filters, CommandHandler
 
 import model
-from converter import convert_to_ogg
-from custom_filters import is_in_database, is_audio_document
-from model import Sticker
-from utils import download_file
+from custom_filters import is_in_database
 
+logger = logzero.setup_logger(__name__)
 
-States = Enum('States', 'NAME')
+States = Enum('States', 'TAGS')
 
 
 sticker_storage = model.get_storage()
@@ -21,59 +21,44 @@ def cmd_cancel(_, update):
     return ConversationHandler.END
 
 
-def audio_handler(bot, update, user_data):
+def sticker_handler(bot, update, user_data):
     message = update.message
 
-    if message.voice is not None:
-        meme_file_id = message.voice.file_id
+    user_data['sticker_file_id'] = message.sticker.file_id
+    message.reply_text('Okay, now send me a list of tags for the sticker'
+                       ' (separate them with comma).')
 
-    else:
-        message.reply_text('Converting to voice...')
-
-        audio = message.audio or message.document
-        audio_file = download_file(bot, audio.file_id)
-        meme_file = convert_to_ogg(audio_file)
-
-        response = message.reply_voice(meme_file)
-        meme_file_id = response.voice.file_id
-
-    user_data['meme_file_id'] = meme_file_id
-    message.reply_text('Okay, now send me the name for the meme.')
-
-    return States.NAME
+    return States.TAGS
 
 
-def name_handler(_, update, user_data):
+def tags_handler(_, update, user_data):
     message = update.message
 
-    meme_name = message.text.strip()
-    file_id = user_data['meme_file_id']
+    text = message.text.strip()
+    tags = [tag for tag in re.split('\s*,\s*', text)
+            if tag is not None]
 
-    meme = Sticker(
-        id=None,  # automatically created by DB
-        name=meme_name,
-        file_id=file_id,
-        owner_id=message.from_user.id,
-        times_used=0
+    sticker_storage.add(
+        file_id=user_data['sticker_file_id'],
+        tags=tags,
+        owner_id=message.from_user.id
     )
-
-    sticker_storage.add(meme)
-    message.reply_text('Meme has been added.')
+    message.reply_text('Sticker has been added.')
 
     return ConversationHandler.END
 
 
 conversation = ConversationHandler(
     entry_points=[MessageHandler(
-        ~is_in_database & (Filters.audio | Filters.voice | is_audio_document),
-        audio_handler,
+        ~is_in_database & Filters.sticker,
+        sticker_handler,
         pass_user_data=True
     )],
 
     states={
-        States.NAME: [MessageHandler(
+        States.TAGS: [MessageHandler(
             Filters.text,
-            name_handler,
+            tags_handler,
             pass_user_data=True
         )]
     },
