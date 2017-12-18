@@ -6,12 +6,9 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, InlineQueryHan
 
 import config
 import handlers
-import model
 from custom_filters import is_in_database
 
 logger = logzero.setup_logger(__name__, level=logging.INFO)
-
-meme_storage = model.get_storage()
 
 
 def error_handler(_, update, error):
