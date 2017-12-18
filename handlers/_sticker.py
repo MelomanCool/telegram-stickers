@@ -5,7 +5,7 @@ sticker_storage = model.get_storage()
 
 
 def sticker_handler(_, update):
-    """Handles known memes, returns their names"""
+    """Handles known stickers, returns their description"""
 
     sticker = sticker_storage.get_by_file_id(update.message.sticker.file_id)
     tags = sticker_storage.get_tags(sticker.id)
