@@ -1,4 +1,4 @@
-from telegram import InlineQueryResultCachedVoice
+from telegram import InlineQueryResultCachedSticker
 
 import model
 import logzero
@@ -13,13 +13,13 @@ def inlinequery(_, update):
     logger.info('Inline query: %s', query)
 
     if query:
-        memes = sticker_storage.find(query, max_count=20)
+        stickers = sticker_storage.find(query, max_count=20)
     else:
-        memes = sticker_storage.get_most_popular(max_count=20)
+        stickers = sticker_storage.get_most_popular(max_count=20)
 
     results = [
-        InlineQueryResultCachedVoice(meme.id, meme.file_id, title=meme.name)
-        for meme in memes
+        InlineQueryResultCachedSticker(sticker.id, sticker.file_id)
+        for sticker in stickers
     ]
     update.inline_query.answer(results, cache_time=0)
 
