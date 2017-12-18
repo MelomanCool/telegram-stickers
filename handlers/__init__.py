@@ -1,5 +1,5 @@
 from ._conversation import conversation
-from ._meme import meme_handler as meme
+from ._sticker import sticker_handler as sticker
 from ._inline import inlinequery, chosen_inline_result
 from ._delete import delete
 from ._fix import fix

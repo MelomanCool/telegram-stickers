@@ -59,6 +59,10 @@ class StickerStorage(ABC):
         pass
 
     @abstractmethod
+    def get_tags(self, sticker_id) -> List[str]:
+        pass
+
+    @abstractmethod
     def inc_times_used(self, sticker_id):
         pass
 
@@ -180,6 +184,14 @@ class SqliteStickerStorage(StickerStorage):
     def get_all(self):
         rows = self.connection.execute('SELECT * FROM stickers').fetchall()
         return [Sticker(**r) for r in rows]
+
+    def get_tags(self, sticker_id) -> List[str]:
+        rows = self.connection.execute(
+            'SELECT name FROM tags'
+            ' WHERE sticker_id = ?',
+            (sticker_id,)
+        )
+        return [row['name'] for row in rows]
 
     def inc_times_used(self, sticker_id):
         with self.connection:
