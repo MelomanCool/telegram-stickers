@@ -62,6 +62,14 @@ class StickerStorage(ABC):
         pass
 
     @abstractmethod
+    def delete_tag(self, sticker_id, tag_name, from_user_id):
+        pass
+
+    @abstractmethod
+    def delete_tag_by_file_id(self, file_id, tag_name, from_user_id):
+        pass
+
+    @abstractmethod
     def get(self, sticker_id) -> Sticker:
         """Get a sticker by it's id"""
         pass
@@ -178,6 +186,22 @@ class SqliteStickerStorage(StickerStorage):
     def add_tags_by_file_id(self, file_id, tags, owner_id):
         sticker = self.get_by_file_id(file_id)
         self.add_tags(sticker.id, tags, owner_id)
+
+    def delete_tag(self, sticker_id, tag_name, from_user_id):
+        if from_user_id != self.get(sticker_id).owner_id:
+            raise Unauthorized
+
+        with self.connection:
+            self.connection.execute(
+                'DELETE FROM tags'
+                ' WHERE sticker_id = ?'
+                '  AND name = ?',
+                (sticker_id, tag_name)
+            )
+
+    def delete_tag_by_file_id(self, file_id, tag_name, from_user_id):
+        sticker = self.get_by_file_id(file_id)
+        self.delete_tag(sticker.id, tag_name, from_user_id)
 
     def delete_by_file_id(self, file_id, from_user_id):
         if from_user_id != self.get_by_file_id(file_id).owner_id:
