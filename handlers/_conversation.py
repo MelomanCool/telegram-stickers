@@ -1,4 +1,3 @@
-import re
 from enum import Enum
 
 import logzero
@@ -6,6 +5,8 @@ from telegram.ext import ConversationHandler, MessageHandler, Filters, CommandHa
 
 import model
 from custom_filters import is_in_database
+from utils import extract_tags
+
 
 logger = logzero.setup_logger(__name__)
 
@@ -35,8 +36,7 @@ def tags_handler(_, update, user_data):
     message = update.message
 
     text = message.text.strip()
-    tags = [tag for tag in re.split('\s*,\s*', text)
-            if tag is not None]
+    tags = extract_tags(text)
 
     sticker_storage.add(
         file_id=user_data['sticker_file_id'],
