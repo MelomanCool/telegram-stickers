@@ -14,6 +14,14 @@ def inject_quoted_sticker_id(func):
     return wrapped
 
 
+def filter_tag(tag: str):
+    # remove all characters except alphanumeric and "_"
+    return (re.sub(r'\W+', '', tag)
+            .lower())
+
+
 def extract_tags(tag_str):
-    return [tag for tag in re.split('\s*,\s*', tag_str)
-            if tag is not None]
+    tags = (tag for tag in re.split('\s*,\s*', tag_str)
+            if tag is not None)
+    tags = (filter_tag(tag) for tag in tags)
+    return list(tags)

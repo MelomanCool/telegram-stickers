@@ -7,6 +7,7 @@ from typing import List
 
 import config
 from tag_search import find_stickers
+from utils import filter_tag
 from .exceptions import Unauthorized
 from .sticker import Sticker
 from .tagged_sticker import TaggedSticker
@@ -114,6 +115,7 @@ class StickerStorage(ABC):
 
     def find(self, search_query: str, max_count) -> List[Sticker]:
         query_tags = re.split('\s+', search_query)
+        query_tags = [filter_tag(tag) for tag in query_tags]
         return find_stickers(
             query_tags,
             self.get_all(tagged=True),
