@@ -28,6 +28,9 @@ def tags_similarity(left_tags, right_tags, cutoff=0.6):
 def find_stickers(query_tags, tagged_stickers: List[TaggedSticker], max_count):
     sticker_scores = [(tags_similarity(query_tags, sticker.tags), sticker)
                       for sticker in tagged_stickers]
+    sticker_scores = [(score, sticker)
+                      for score, sticker in sticker_scores
+                      if score > 0]
     sticker_scores.sort(key=itemgetter(0), reverse=True)
 
     tagged_stickers = [sticker for score, sticker in sticker_scores]
