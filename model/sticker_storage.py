@@ -2,6 +2,7 @@ import logging
 import re
 import sqlite3
 from abc import ABC, abstractmethod
+from functools import wraps
 from typing import List
 
 import config
@@ -21,6 +22,23 @@ def get_storage():
     if not _storage:
         _storage = SqliteStickerStorage(config.DB_PATH)
     return _storage
+
+
+def may_be_tagged(func):
+    @wraps(func)
+    def wrapped(self, *args, tagged=False, **kwargs):
+        result = func(self, *args, **kwargs)
+
+        if not tagged:
+            return result
+
+        if isinstance(result, Sticker):
+            return self._convert_to_tagged(result)
+        else:
+            return [self._convert_to_tagged(sticker)
+                    for sticker in result]
+
+    return wrapped
 
 
 class StickerStorage(ABC):
@@ -70,10 +88,6 @@ class StickerStorage(ABC):
         pass
 
     @abstractmethod
-    def get_all_tagged(self) -> List[TaggedSticker]:
-        pass
-
-    @abstractmethod
     def get_tags(self, sticker_id) -> List[str]:
         pass
 
@@ -93,8 +107,14 @@ class StickerStorage(ABC):
         query_tags = re.split('\s+', search_query)
         return find_stickers(
             query_tags,
-            self.get_all_tagged(),
+            self.get_all(tagged=True),
             max_count
+        )
+
+    def _convert_to_tagged(self, sticker):
+        return TaggedSticker(
+            **sticker._asdict(),
+            tags=self.get_tags(sticker.id)
         )
 
 
@@ -163,6 +183,7 @@ class SqliteStickerStorage(StickerStorage):
                 (file_id,)
             )
 
+    @may_be_tagged
     def get(self, sticker_id) -> Sticker:
         row = self.connection.execute(
             'SELECT * FROM stickers'
@@ -175,6 +196,7 @@ class SqliteStickerStorage(StickerStorage):
 
         return Sticker(**row)
 
+    @may_be_tagged
     def get_by_file_id(self, file_id) -> Sticker:
         row = self.connection.execute(
             'SELECT * FROM stickers'
@@ -187,6 +209,7 @@ class SqliteStickerStorage(StickerStorage):
 
         return Sticker(**row)
 
+    @may_be_tagged
     def get_for_owner(self, owner_id, max_count) -> List[Sticker]:
         rows = self.connection.execute(
             'SELECT * FROM stickers'
@@ -197,6 +220,7 @@ class SqliteStickerStorage(StickerStorage):
 
         return [Sticker(**r) for r in rows]
 
+    @may_be_tagged
     def get_most_popular(self, max_count) -> List[Sticker]:
         rows = self.connection.execute(
             'SELECT * FROM stickers'
@@ -206,6 +230,7 @@ class SqliteStickerStorage(StickerStorage):
         ).fetchall()
         return [Sticker(**r) for r in rows]
 
+    @may_be_tagged
     def get_many(self, max_count) -> List[Sticker]:
         rows = self.connection.execute(
             'SELECT * FROM stickers'
@@ -214,6 +239,7 @@ class SqliteStickerStorage(StickerStorage):
         ).fetchall()
         return [Sticker(**r) for r in rows]
 
+    @may_be_tagged
     def get_all(self):
         rows = self.connection.execute('SELECT * FROM stickers').fetchall()
         return [Sticker(**r) for r in rows]
@@ -225,16 +251,6 @@ class SqliteStickerStorage(StickerStorage):
             (sticker_id,)
         )
         return [row['name'] for row in rows]
-
-    def get_all_tagged(self) -> List[TaggedSticker]:
-        stickers = self.get_all()
-        return [
-            TaggedSticker(
-                **sticker._asdict(),
-                tags=self.get_tags(sticker.id)
-            )
-            for sticker in stickers
-        ]
 
     def inc_times_used(self, sticker_id):
         with self.connection:
