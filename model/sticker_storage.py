@@ -30,11 +30,11 @@ class StickerStorage(ABC):
         pass
 
     @abstractmethod
-    def add_tags(self, sticker_id, tags):
+    def add_tags(self, sticker_id, tags, owner_id):
         pass
 
     @abstractmethod
-    def add_tags_by_file_id(self, file_id, tags):
+    def add_tags_by_file_id(self, file_id, tags, owner_id):
         pass
 
     @abstractmethod
@@ -117,10 +117,15 @@ class SqliteStickerStorage(StickerStorage):
             ' id         INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,'
             ' sticker_id INTEGER NOT NULL,'
             ' name       TEXT NOT NULL,'
+            ' owner_id   INTEGER NOT NULL,'
             ' FOREIGN KEY(sticker_id)'
             '  REFERENCES stickers(id)'
             '  ON DELETE CASCADE'
             ')'
+        )
+        self.connection.execute(
+            'CREATE UNIQUE INDEX IF NOT EXISTS sticker_tag'
+            ' ON tags (sticker_id, name)'
         )
 
     def add(self, file_id, tags, owner_id):
@@ -132,20 +137,20 @@ class SqliteStickerStorage(StickerStorage):
                 (file_id, owner_id)
             ).lastrowid
 
-        self.add_tags(sticker_id, tags)
+        self.add_tags(sticker_id, tags, owner_id)
 
-    def add_tags(self, sticker_id, tags):
+    def add_tags(self, sticker_id, tags, owner_id):
         with self.connection:
             for tag in tags:
                 self.connection.execute(
-                    'INSERT INTO tags (sticker_id, name)'
-                    ' VALUES (?, ?)',
-                    (sticker_id, tag)
+                    'INSERT INTO tags (sticker_id, name, owner_id)'
+                    ' VALUES (?, ?, ?)',
+                    (sticker_id, tag, owner_id)
                 )
 
-    def add_tags_by_file_id(self, file_id, tags):
+    def add_tags_by_file_id(self, file_id, tags, owner_id):
         sticker = self.get_by_file_id(file_id)
-        self.add_tags(sticker.id, tags)
+        self.add_tags(sticker.id, tags, owner_id)
 
     def delete_by_file_id(self, file_id, from_user_id):
         if from_user_id != self.get_by_file_id(file_id).owner_id:
