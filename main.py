@@ -22,7 +22,6 @@ def main():
 
     dp.add_handler(handlers.conversation)
     dp.add_handler(MessageHandler(is_in_database, handlers.sticker))
-    dp.add_handler(CommandHandler('delete', handlers.delete))
     dp.add_handler(CommandHandler('add_tags', handlers.add_tags, pass_args=True))
     dp.add_handler(CommandHandler('delete_tag', handlers.delete_tag, pass_args=True))
     dp.add_handler(CommandHandler('my', handlers.my))
