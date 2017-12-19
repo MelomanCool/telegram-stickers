@@ -1,13 +1,4 @@
-from io import BytesIO
 from functools import wraps
-
-
-def download_file(bot, file_id):
-    f = BytesIO()
-    info = bot.get_file(file_id)
-    info.download(out=f)
-    f.seek(0)
-    return f
 
 
 def inject_quoted_sticker_id(func):
