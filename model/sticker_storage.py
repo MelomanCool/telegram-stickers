@@ -124,8 +124,8 @@ class StickerStorage(ABC):
 
     def _convert_to_tagged(self, sticker):
         return TaggedSticker(
-            **sticker._asdict(),
-            tags=self.get_tags(sticker.id)
+            tags=self.get_tags(sticker.id),
+            **sticker._asdict()
         )
 
 
