@@ -49,6 +49,7 @@ class StickerStorage(ABC):
 
     @abstractmethod
     def add_tags(self, sticker_id, tags, owner_id):
+        """Add tags, without overwriting existing ones"""
         pass
 
     @abstractmethod
@@ -160,8 +161,14 @@ class SqliteStickerStorage(StickerStorage):
         self.add_tags(sticker_id, tags, owner_id)
 
     def add_tags(self, sticker_id, tags, owner_id):
+        existing_tags = self.get_tags(sticker_id)
+        new_tags = set(tags) - set(existing_tags)
+
+        if not new_tags:
+            raise ValueError('No new tags to add')
+
         with self.connection:
-            for tag in tags:
+            for tag in new_tags:
                 self.connection.execute(
                     'INSERT INTO tags (sticker_id, name, owner_id)'
                     ' VALUES (?, ?, ?)',
