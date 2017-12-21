@@ -1,3 +1,4 @@
+pytest
 logzero
 python-telegram-bot
 pydub
