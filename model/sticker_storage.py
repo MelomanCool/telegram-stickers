@@ -160,13 +160,15 @@ class SqliteStickerStorage(StickerStorage):
         )
 
     def add(self, file_id, tags, owner_id):
-
-        with self.connection:
-            sticker_id = self.connection.execute(
-                'INSERT INTO stickers (file_id, owner_id)'
-                ' VALUES (?, ?)',
-                (file_id, owner_id)
-            ).lastrowid
+        try:
+            with self.connection:
+                sticker_id = self.connection.execute(
+                    'INSERT INTO stickers (file_id, owner_id)'
+                    ' VALUES (?, ?)',
+                    (file_id, owner_id)
+                ).lastrowid
+        except sqlite3.IntegrityError:
+            raise ValueError('Sticker with this file_id is already in storage')
 
         self.add_tags(sticker_id, tags, owner_id)
 
