@@ -59,7 +59,7 @@ def test_that_add_tags_adds_only_new_tags_to_sticker(
 
 
 def test_that_one_sticker_can_only_be_added_once(sticker_storage: SqliteStickerStorage,
-                                             prepared_sticker):
+                                                 prepared_sticker):
     sticker_storage.add(prepared_sticker.file_id, prepared_sticker.tags, prepared_sticker.owner_id)
     with pytest.raises(ValueError):
         sticker_storage.add(prepared_sticker.file_id, prepared_sticker.tags, prepared_sticker.owner_id)
