@@ -8,7 +8,7 @@ def sticker_storage():
     return SqliteStickerStorage(':memory:')
 
 
-def test_that_get_tag_returns_added_tags(sticker_storage):
+def test_that_get_tags_returns_added_tags(sticker_storage):
     tags = ['lorem', 'ipsum', 'dolor', 'sit', 'amet']
     file_id = '1'
 
@@ -17,6 +17,6 @@ def test_that_get_tag_returns_added_tags(sticker_storage):
         tags=tags,
         owner_id=1
     )
-    sticker = sticker_storage.get_by_file_id(file_id)
+    sticker = sticker_storage.get_by_file_id(file_id, tagged=True)
 
-    assert set(tags) == set(sticker_storage.get_tags(sticker.id))
+    assert set(tags) == set(sticker.tags)
