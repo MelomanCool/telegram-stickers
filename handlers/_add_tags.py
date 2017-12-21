@@ -11,6 +11,9 @@ def add_tags(_, update, args, quoted_sticker_id):
     arg_str = ' '.join(args)
 
     tags = extract_tags(arg_str)
+    if not tags:
+        message.reply_text('Usage: /add_tags *tags*')
+        return
 
     try:
         sticker_storage.add_tags_by_file_id(
