@@ -1,3 +1,4 @@
+from ._help import help_
 from ._conversation import conversation
 from ._sticker import sticker_handler as sticker
 from ._inline import inlinequery, chosen_inline_result

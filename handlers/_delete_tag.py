@@ -14,6 +14,10 @@ def delete_tag(_, update, args, quoted_sticker_id):
     message = update.message
     tag_name = ' '.join(args)
 
+    if not tag_name:
+        message.reply_text('Usage: /delete_tag *tag*')
+        return
+
     try:
         sticker_storage.delete_tag_by_file_id(quoted_sticker_id, tag_name, message.from_user.id)
 
