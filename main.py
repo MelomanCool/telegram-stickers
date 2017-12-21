@@ -20,6 +20,7 @@ def main():
 
     dp = updater.dispatcher
 
+    dp.add_handler(CommandHandler(['start', 'help'], handlers.help_))
     dp.add_handler(handlers.conversation)
     dp.add_handler(MessageHandler(is_in_database, handlers.sticker))
     dp.add_handler(CommandHandler('add_tags', handlers.add_tags, pass_args=True))
