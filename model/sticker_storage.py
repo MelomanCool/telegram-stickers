@@ -2,8 +2,7 @@ import logging
 import re
 import sqlite3
 from abc import ABC, abstractmethod
-from functools import wraps
-from typing import List
+from typing import List, Union
 
 import config
 from tag_search import find_stickers
@@ -25,21 +24,7 @@ def get_storage():
     return _storage
 
 
-def may_be_tagged(func):
-    @wraps(func)
-    def wrapped(self, *args, tagged=False, **kwargs):
-        result = func(self, *args, **kwargs)
-
-        if not tagged:
-            return result
-
-        if isinstance(result, Sticker):
-            return self._convert_to_tagged(result)
-        else:
-            return [self._convert_to_tagged(sticker)
-                    for sticker in result]
-
-    return wrapped
+MaybeTaggedSticker = Union[Sticker, TaggedSticker]
 
 
 class StickerStorage(ABC):
@@ -71,29 +56,29 @@ class StickerStorage(ABC):
         pass
 
     @abstractmethod
-    def get(self, sticker_id) -> Sticker:
+    def get(self, sticker_id, tagged=False) -> MaybeTaggedSticker:
         """Get a sticker by it's id"""
         pass
 
     @abstractmethod
-    def get_by_file_id(self, file_id) -> Sticker:
+    def get_by_file_id(self, file_id, tagged=False) -> MaybeTaggedSticker:
         """Get a sticker by it's file_id"""
         pass
 
     @abstractmethod
-    def get_for_owner(self, owner_id, max_count) -> List[Sticker]:
+    def get_for_owner(self, owner_id, max_count, tagged=False) -> List[MaybeTaggedSticker]:
         pass
 
     @abstractmethod
-    def get_most_popular(self, max_count) -> List[Sticker]:
+    def get_most_popular(self, max_count, tagged=False) -> List[MaybeTaggedSticker]:
         pass
 
     @abstractmethod
-    def get_many(self, max_count) -> List[Sticker]:
+    def get_many(self, max_count, tagged=False) -> List[MaybeTaggedSticker]:
         pass
 
     @abstractmethod
-    def get_all(self):
+    def get_all(self, tagged=False) -> List[MaybeTaggedSticker]:
         """Returns all stickers"""
         pass
 
@@ -218,8 +203,7 @@ class SqliteStickerStorage(StickerStorage):
                 (file_id,)
             )
 
-    @may_be_tagged
-    def get(self, sticker_id) -> Sticker:
+    def get(self, sticker_id, tagged=False) -> MaybeTaggedSticker:
         row = self.connection.execute(
             'SELECT * FROM stickers'
             ' WHERE id = ?',
@@ -229,10 +213,9 @@ class SqliteStickerStorage(StickerStorage):
         if row is None:
             raise KeyError
 
-        return Sticker(**row)
+        return self.row_to_sticker(row, tagged=tagged)
 
-    @may_be_tagged
-    def get_by_file_id(self, file_id) -> Sticker:
+    def get_by_file_id(self, file_id, tagged=False) -> MaybeTaggedSticker:
         row = self.connection.execute(
             'SELECT * FROM stickers'
             ' WHERE file_id = ?',
@@ -242,10 +225,9 @@ class SqliteStickerStorage(StickerStorage):
         if row is None:
             raise KeyError
 
-        return Sticker(**row)
+        return self.row_to_sticker(row, tagged=tagged)
 
-    @may_be_tagged
-    def get_for_owner(self, owner_id, max_count) -> List[Sticker]:
+    def get_for_owner(self, owner_id, max_count, tagged=False) -> List[MaybeTaggedSticker]:
         rows = self.connection.execute(
             'SELECT * FROM stickers'
             ' WHERE owner_id = :owner_id'
@@ -253,31 +235,32 @@ class SqliteStickerStorage(StickerStorage):
             {'owner_id': owner_id, 'max_count': max_count}
         ).fetchall()
 
-        return [Sticker(**r) for r in rows]
+        return [self.row_to_sticker(row, tagged=tagged)
+                for row in rows]
 
-    @may_be_tagged
-    def get_most_popular(self, max_count) -> List[Sticker]:
+    def get_most_popular(self, max_count, tagged=False) -> List[MaybeTaggedSticker]:
         rows = self.connection.execute(
             'SELECT * FROM stickers'
             ' ORDER BY times_used DESC'
             ' LIMIT ?',
             (max_count,)
         ).fetchall()
-        return [Sticker(**r) for r in rows]
+        return [self.row_to_sticker(row, tagged=tagged)
+                for row in rows]
 
-    @may_be_tagged
-    def get_many(self, max_count) -> List[Sticker]:
+    def get_many(self, max_count, tagged=False) -> List[MaybeTaggedSticker]:
         rows = self.connection.execute(
             'SELECT * FROM stickers'
             ' LIMIT ?',
             (max_count,)
         ).fetchall()
-        return [Sticker(**r) for r in rows]
+        return [self.row_to_sticker(row, tagged=tagged)
+                for row in rows]
 
-    @may_be_tagged
-    def get_all(self):
+    def get_all(self, tagged=False) -> List[MaybeTaggedSticker]:
         rows = self.connection.execute('SELECT * FROM stickers').fetchall()
-        return [Sticker(**r) for r in rows]
+        return [self.row_to_sticker(row, tagged=tagged)
+                for row in rows]
 
     def get_tags(self, sticker_id) -> List[str]:
         rows = self.connection.execute(
@@ -317,3 +300,10 @@ class SqliteStickerStorage(StickerStorage):
         ).fetchone()
         exists = list(row)[0]  # returns 1 or 0
         return bool(exists)
+
+    def row_to_sticker(self, row, tagged=False) -> MaybeTaggedSticker:
+        if tagged:
+            return TaggedSticker(tags=self.get_tags(row['id']),
+                                 **row)
+        else:
+            return Sticker(**row)
