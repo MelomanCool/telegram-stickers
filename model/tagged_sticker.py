@@ -1,6 +1,4 @@
 from collections import namedtuple
 
-from .sticker import Sticker
 
-
-TaggedSticker = namedtuple('TaggedSticker', Sticker._fields + ('tags',))
+TaggedSticker = namedtuple('TaggedSticker', ['id', 'file_id', 'owner_id', 'times_used', 'tags'])
