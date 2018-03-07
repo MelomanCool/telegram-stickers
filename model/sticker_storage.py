@@ -70,7 +70,7 @@ class StickerStorage(ABC):
         pass
 
     @abstractmethod
-    def get_most_popular(self, max_count, tagged=False) -> List[MaybeTaggedSticker]:
+    def get_most_popular(self, tagged=False) -> List[MaybeTaggedSticker]:
         pass
 
     @abstractmethod
@@ -98,13 +98,12 @@ class StickerStorage(ABC):
     def has_sticker_with_file_id(self, file_id) -> bool:
         pass
 
-    def find(self, search_query: str, max_count) -> List[Sticker]:
+    def find(self, search_query: str) -> List[Sticker]:
         query_tags = re.split('\s+', search_query)
         query_tags = [filter_tag(tag) for tag in query_tags]
         return find_stickers(
             query_tags,
-            self.get_all(tagged=True),
-            max_count
+            self.get_all(tagged=True)
         )
 
     def _convert_to_tagged(self, sticker):
@@ -238,12 +237,10 @@ class SqliteStickerStorage(StickerStorage):
         return [self.row_to_sticker(row, tagged=tagged)
                 for row in rows]
 
-    def get_most_popular(self, max_count, tagged=False) -> List[MaybeTaggedSticker]:
+    def get_most_popular(self, tagged=False) -> List[MaybeTaggedSticker]:
         rows = self.connection.execute(
             'SELECT * FROM stickers'
             ' ORDER BY times_used DESC'
-            ' LIMIT ?',
-            (max_count,)
         ).fetchall()
         return [self.row_to_sticker(row, tagged=tagged)
                 for row in rows]
