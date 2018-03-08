@@ -21,6 +21,17 @@ def filter_old_results(results):
             if res['expires'] > now}
 
 
+def save_result(results, query, res):
+    new_results = results.copy()
+    new_results[query] = {'stickers': res,
+                          'expires': datetime.now() + timedelta(minutes=5)}
+    return new_results
+
+
+def get_result(results, query):
+    return results[query]['stickers']
+
+
 def inlinequery(_, update):
     global large_results
 
@@ -35,11 +46,10 @@ def inlinequery(_, update):
             stickers = sticker_storage.get_most_popular()
 
         if len(stickers) > PAGE_SIZE:
-            large_results[query] = {'stickers': stickers,
-                                    'expires': datetime.now() + timedelta(minutes=5)}
+            large_results = save_result(large_results, query, stickers)
 
     else:
-        stickers = large_results[query]['stickers']
+        stickers = get_result(large_results, query)
 
     large_results = filter_old_results(large_results)
 
