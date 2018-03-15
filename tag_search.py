@@ -11,18 +11,29 @@ def string_similarity(first, second):
     return SequenceMatcher(a=first, b=second).ratio()
 
 
+def average(seq):
+    if len(seq) == 0:
+        return 0
+    else:
+        return sum(seq) / len(seq)
+
+
 def tags_similarity(left_tags, right_tags, cutoff=0.6):
     if not (0 <= cutoff <= 1):
         raise ValueError('cutoff should be between 0 and 1')
 
-    score = 0
-    for left_tag in left_tags:
-        # adding degree of similarity of the most similar tag
-        most_similar_similarity = max(string_similarity(left_tag, right_tag) for right_tag in right_tags)
-        if most_similar_similarity > cutoff:
-            score += most_similar_similarity
+    raw_scores = [
+        # degree of similarity of the most similar tag
+        max(string_similarity(left_tag, right_tag) for right_tag in right_tags)
+        for left_tag in left_tags
+    ]
 
-    return score / len(left_tags)
+    scores = [
+        score if score > cutoff else 0
+        for score in raw_scores
+    ]
+
+    return average(scores)
 
 
 def find_stickers(query_tags, tagged_stickers: List[TaggedSticker]):
