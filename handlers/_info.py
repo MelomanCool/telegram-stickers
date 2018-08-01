@@ -13,12 +13,19 @@ def info(_, update, quoted_sticker_id):
     """Sends information about a known sticker"""
 
     try:
-        sticker = sticker_storage.get_by_file_id(quoted_sticker_id)
-        tags = sticker_storage.get_tags(sticker.id)
+        try:
+            sticker = sticker_storage.get_by_file_id(quoted_sticker_id)
 
-        update.message.reply_to_message.reply_text(
-            'Tags: {}\n'.format(', '.join(tags))
-          + 'Times used: {}'.format(sticker.times_used)
-        )
+        except KeyError:
+            update.message.reply_to_message.reply_text("Sorry, I don't know this sticker yet.")
+
+        else:
+            tags = sticker_storage.get_tags(sticker.id)
+
+            update.message.reply_to_message.reply_text(
+                'Tags: {}\n'.format(', '.join(tags))
+              + 'Times used: {}'.format(sticker.times_used)
+            )
+
     except Exception as e:
         logger.exception(e)
