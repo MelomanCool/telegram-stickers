@@ -7,3 +7,4 @@ from ._delete_tag import delete_tag
 from ._delete import delete
 from ._get_by_id import get_by_id
 from ._my import my
+from ._info import info
