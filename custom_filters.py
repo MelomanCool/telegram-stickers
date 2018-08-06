@@ -8,8 +8,7 @@ class IsInDatabase(BaseFilter):
         self.storage = storage
 
     def filter(self, message):
-        return (message.sticker is not None
-                and self.storage.has_sticker_with_file_id(message.sticker.file_id))
+        return self.storage.has_sticker_with_file_id(message.sticker.file_id)
 
 
 is_in_database = IsInDatabase(storage=model.get_storage())

@@ -50,7 +50,7 @@ def tags_handler(_, update, user_data):
 
 conversation = ConversationHandler(
     entry_points=[MessageHandler(
-        ~is_in_database & Filters.sticker & Filters.private,
+        Filters.private & Filters.sticker & (~is_in_database),
         sticker_handler,
         pass_user_data=True
     )],
