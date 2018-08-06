@@ -30,7 +30,7 @@ MaybeTaggedSticker = Union[Sticker, TaggedSticker]
 class StickerStorage(ABC):
 
     @abstractmethod
-    def add(self, file_id, tags, owner_id):
+    def add(self, file_id, owner_id):
         pass
 
     @abstractmethod
@@ -143,18 +143,16 @@ class SqliteStickerStorage(StickerStorage):
             ' ON tags (sticker_id, name)'
         )
 
-    def add(self, file_id, tags, owner_id):
+    def add(self, file_id, owner_id):
         try:
             with self.connection:
-                sticker_id = self.connection.execute(
+                return self.connection.execute(
                     'INSERT INTO stickers (file_id, owner_id)'
                     ' VALUES (?, ?)',
                     (file_id, owner_id)
                 ).lastrowid
         except sqlite3.IntegrityError:
             raise ValueError('Sticker with this file_id is already in storage')
-
-        self.add_tags(sticker_id, tags, owner_id)
 
     def add_tags(self, sticker_id, tags, owner_id):
         existing_tags = self.get_tags(sticker_id)

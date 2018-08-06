@@ -38,8 +38,12 @@ def tags_handler(_, update, user_data):
     text = message.text.strip()
     tags = extract_tags(text)
 
-    sticker_storage.add(
+    sticker_id = sticker_storage.add(
         file_id=user_data['sticker_file_id'],
+        owner_id=message.from_user.id
+    )
+    sticker_storage.add_tags(
+        sticker_id=sticker_id,
         tags=tags,
         owner_id=message.from_user.id
     )
