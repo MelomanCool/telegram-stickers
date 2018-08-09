@@ -103,7 +103,8 @@ class StickerStorage(ABC):
         query_tags = [filter_tag(tag) for tag in query_tags]
         return find_stickers(
             query_tags,
-            self.get_all(tagged=True)
+            [s for s in self.get_all(tagged=True)
+             if len(s.tags) != 0]
         )
 
     def _convert_to_tagged(self, sticker):
