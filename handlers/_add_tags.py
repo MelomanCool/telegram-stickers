@@ -15,6 +15,12 @@ def add_tags(_, update, args, quoted_sticker_id):
         message.reply_text('Usage: /add_tags *tags*')
         return
 
+    if not sticker_storage.has_sticker_with_file_id(quoted_sticker_id):
+        sticker_storage.add(
+            file_id=quoted_sticker_id,
+            owner_id=message.from_user.id
+        )
+
     try:
         sticker_storage.add_tags_by_file_id(
             file_id=quoted_sticker_id,
