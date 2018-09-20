@@ -2,6 +2,7 @@ import pytest
 
 from model import TaggedSticker
 from model.sticker_storage import SqliteStickerStorage
+from utils import extract_tags
 
 
 @pytest.fixture
@@ -66,3 +67,22 @@ def test_that_one_sticker_can_only_be_added_once(sticker_storage: SqliteStickerS
         sticker_storage.add(prepared_sticker.file_id, prepared_sticker.owner_id)
 
     assert len(sticker_storage.get_all()) == 1
+
+
+def test_that_extract_tags_splits_on_whitespace_and_commma_characters():
+    assert extract_tags('this is a test') == ['this', 'is', 'a', 'test']
+    assert extract_tags('this, is, a, test') == ['this', 'is', 'a', 'test']
+    assert extract_tags('this, is a test') == ['this', 'is', 'a', 'test']
+    assert extract_tags('this,,,,,is,a,test') == ['this', 'is', 'a', 'test']
+
+
+def test_that_extract_tags_ignores_trailing_whitespace_and_comma_characters():
+    assert extract_tags('this is a test,') == ['this', 'is', 'a', 'test']
+    assert extract_tags('this is a test,,') == ['this', 'is', 'a', 'test']
+    assert extract_tags('this is a test ') == ['this', 'is', 'a', 'test']
+    assert extract_tags('this is a test  ') == ['this', 'is', 'a', 'test']
+    assert extract_tags(', this is a test,   ') == ['this', 'is', 'a', 'test']
+
+
+def test_that_extract_tags_leaves_only_alphanumeric_and_underline_characters():
+    assert extract_tags('this.is.a test') == ['thisisa', 'test']
