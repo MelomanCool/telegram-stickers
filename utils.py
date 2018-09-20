@@ -21,7 +21,7 @@ def filter_tag(tag: str):
 
 
 def extract_tags(tag_str):
-    tags = (tag for tag in re.split('[\s,]*', tag_str)
+    tags = (tag for tag in re.split('[\s,]+', tag_str)
             if tag)
     tags = (filter_tag(tag) for tag in tags)
     return list(tags)
