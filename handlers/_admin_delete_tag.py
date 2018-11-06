@@ -23,7 +23,7 @@ def admin_delete_tag(_, update, args, quoted_sticker_id):
     )
 
     message.reply_text(
-        'Tag {} have been deleted.\n\n'
-        + 'Current tags: {}'
+        ('Tag {} have been deleted.\n\n'
+         + 'Current tags: {}')
         .format(tag_name, ', '.join(sticker_storage.get_by_file_id(quoted_sticker_id, tagged=True).tags))
     )
