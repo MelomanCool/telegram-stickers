@@ -174,10 +174,7 @@ class SqliteStickerStorage(StickerStorage):
         sticker = self.get_by_file_id(file_id)
         self.add_tags(sticker.id, tags, owner_id)
 
-    def delete_tag(self, sticker_id, tag_name, from_user_id):
-        if from_user_id != self.get(sticker_id).owner_id:
-            raise Unauthorized
-
+    def delete_tag_without_check(self, sticker_id, tag_name):
         with self.connection:
             self.connection.execute(
                 'DELETE FROM tags'
@@ -185,6 +182,12 @@ class SqliteStickerStorage(StickerStorage):
                 '  AND name = ?',
                 (sticker_id, tag_name)
             )
+
+    def delete_tag(self, sticker_id, tag_name, from_user_id):
+        if from_user_id != self.get(sticker_id).owner_id:
+            raise Unauthorized
+
+        self.delete_tag_without_check(sticker_id, tag_name)
 
     def delete_tag_by_file_id(self, file_id, tag_name, from_user_id):
         sticker = self.get_by_file_id(file_id)
