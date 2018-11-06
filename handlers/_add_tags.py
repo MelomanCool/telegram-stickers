@@ -43,5 +43,5 @@ def add_tags(_, update, args, quoted_sticker_id):
 
     message.reply_text(
         result_message + '\n'
-        + 'Full list of tags: ' + ', '.join(current_tags)
+        + 'Current tags: ' + ', '.join(current_tags)
     )
