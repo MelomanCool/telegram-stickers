@@ -28,6 +28,7 @@ def main():
     dp.add_handler(CommandHandler('delete_tag', handlers.delete_tag, pass_args=True))
     dp.add_handler(CommandHandler('delete', handlers.delete))
     dp.add_handler(CommandHandler('my', handlers.my))
+    dp.add_handler(CommandHandler('admin_delete_tag', handlers.admin_delete_tag, pass_args=True))
     dp.add_handler(RegexHandler('/(?P<id>\d+)', handlers.get_by_id, pass_groupdict=True))
     dp.add_handler(InlineQueryHandler(handlers.inlinequery))
     dp.add_handler(ChosenInlineResultHandler(handlers.chosen_inline_result))
