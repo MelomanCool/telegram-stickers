@@ -42,6 +42,6 @@ def add_tags(_, update, args, quoted_sticker_id):
         result_message = 'No new tags have been added.'
 
     message.reply_text(
-        result_message + '\n'
+        result_message + '\n\n'
         + 'Current tags: ' + ', '.join(current_tags)
     )
