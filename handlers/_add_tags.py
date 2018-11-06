@@ -21,20 +21,27 @@ def add_tags(_, update, args, quoted_sticker_id):
             owner_id=message.from_user.id
         )
 
+    old_tags = sticker_storage.get_by_file_id(file_id=quoted_sticker_id, tagged=True).tags
+
     try:
         sticker_storage.add_tags_by_file_id(
             file_id=quoted_sticker_id,
             tags=tags,
             owner_id=message.from_user.id
         )
-    except ValueError:
-        result_message = 'No new tags have been added.'
-    else:
-        result_message = 'Tags have been added!'
+    except ValueError:  # no new tags added
+        pass
 
-    sticker = sticker_storage.get_by_file_id(file_id=quoted_sticker_id, tagged=True)
+    current_tags = sticker_storage.get_by_file_id(file_id=quoted_sticker_id, tagged=True).tags
+
+    added_tags = set(current_tags) - set(old_tags)
+    if added_tags:
+        result_message = ('Tags have been added!\n'
+                          + 'New tags: ' + ', '.join(added_tags))
+    else:
+        result_message = 'No new tags have been added.'
+
     message.reply_text(
-        '{result}\n'
-        'Full list of tags: {tags}'
-        .format(result=result_message, tags=', '.join(sticker.tags))
+        result_message + '\n'
+        + 'Full list of tags: ' + ', '.join(current_tags)
     )
