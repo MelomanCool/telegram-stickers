@@ -1,4 +1,5 @@
 import logging
+import json
 
 import logzero
 from telegram.ext import Updater, CommandHandler, MessageHandler, InlineQueryHandler, \
@@ -6,7 +7,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, InlineQueryHan
 
 import config
 import handlers
-from custom_filters import is_in_database
+from custom_filters import is_in_database, user_ids as filter_user_ids
 
 logger = logzero.setup_logger(__name__, level=logging.INFO)
 
@@ -28,10 +29,15 @@ def main():
     dp.add_handler(CommandHandler('delete_tag', handlers.delete_tag, pass_args=True))
     dp.add_handler(CommandHandler('delete', handlers.delete))
     dp.add_handler(CommandHandler('my', handlers.my))
-    dp.add_handler(CommandHandler('admin_delete_tag', handlers.admin_delete_tag, pass_args=True))
     dp.add_handler(RegexHandler('/(?P<id>\d+)', handlers.get_by_id, pass_groupdict=True))
     dp.add_handler(InlineQueryHandler(handlers.inlinequery))
     dp.add_handler(ChosenInlineResultHandler(handlers.chosen_inline_result))
+
+    with open('admins.json') as f:
+        admins = json.load(f)
+    dp.add_handler(CommandHandler('admin_delete_tag',
+                                  filter_user_ids(admins, handlers.admin_delete_tag),
+                                  pass_args=True))
 
     dp.add_error_handler(error_handler)
 
