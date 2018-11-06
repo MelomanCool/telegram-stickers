@@ -160,7 +160,7 @@ class SqliteStickerStorage(StickerStorage):
         new_tags = set(tags) - set(existing_tags)
 
         if not new_tags:
-            raise ValueError('No new tags to add')
+            return
 
         with self.connection:
             for tag in new_tags:

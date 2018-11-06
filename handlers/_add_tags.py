@@ -23,14 +23,11 @@ def add_tags(_, update, args, quoted_sticker_id):
 
     old_tags = sticker_storage.get_by_file_id(file_id=quoted_sticker_id, tagged=True).tags
 
-    try:
-        sticker_storage.add_tags_by_file_id(
-            file_id=quoted_sticker_id,
-            tags=tags,
-            owner_id=message.from_user.id
-        )
-    except ValueError:  # no new tags added
-        pass
+    sticker_storage.add_tags_by_file_id(
+        file_id=quoted_sticker_id,
+        tags=tags,
+        owner_id=message.from_user.id
+    )
 
     current_tags = sticker_storage.get_by_file_id(file_id=quoted_sticker_id, tagged=True).tags
 
