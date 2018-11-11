@@ -38,6 +38,7 @@ def main():
     dp.add_handler(CommandHandler('admin_delete_tag',
                                   filter_user_ids(admins, handlers.admin_delete_tag),
                                   pass_args=True))
+    dp.add_handler(CommandHandler('admin_delete', filter_user_ids(admins, handlers.admin_delete)))
 
     dp.add_error_handler(error_handler)
 

@@ -193,16 +193,19 @@ class SqliteStickerStorage(StickerStorage):
         sticker = self.get_by_file_id(file_id)
         self.delete_tag(sticker.id, tag_name, from_user_id)
 
-    def delete_by_file_id(self, file_id, from_user_id):
-        if from_user_id != self.get_by_file_id(file_id).owner_id:
-            raise Unauthorized
-
+    def delete_by_file_id_without_check(self, file_id):
         with self.connection:
             self.connection.execute(
                 'DELETE FROM stickers '
                 ' WHERE file_id = ?',
                 (file_id,)
             )
+
+    def delete_by_file_id(self, file_id, from_user_id):
+        if from_user_id != self.get_by_file_id(file_id).owner_id:
+            raise Unauthorized
+
+        self.delete_by_file_id_without_check(file_id)
 
     def get(self, sticker_id, tagged=False) -> MaybeTaggedSticker:
         row = self.connection.execute(

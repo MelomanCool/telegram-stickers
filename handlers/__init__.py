@@ -9,3 +9,4 @@ from ._get_by_id import get_by_id
 from ._my import my
 from ._info import info
 from ._admin_delete_tag import admin_delete_tag
+from ._admin_delete import admins_delete
