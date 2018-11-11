@@ -2,7 +2,7 @@ __pycache__/
 .cache
 .idea
 *.db
-*.bak
+/backups
 *~
 /config.py
 /admins.json
