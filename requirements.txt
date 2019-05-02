@@ -1,5 +1,0 @@
-pytest
-logzero
-python-telegram-bot
-pydub
-git+git://github.com/MelomanCool/fuzzywuzzy.git#egg=fuzzywuzzy
