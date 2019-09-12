@@ -23,7 +23,7 @@ def info(_, update, quoted_sticker_id):
             tags = sticker_storage.get_tags(sticker.id)
 
             update.message.reply_to_message.reply_text(
-                'Tags: {}\n'.format(', '.join(tags))
+                'Tags: {}\n'.format(', '.join(sorted(tags)))
               + 'Times used: {}'.format(sticker.times_used)
             )
 

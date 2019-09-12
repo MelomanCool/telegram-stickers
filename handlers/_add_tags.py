@@ -34,11 +34,11 @@ def add_tags(_, update, args, quoted_sticker_id):
     added_tags = set(current_tags) - set(old_tags)
     if added_tags:
         result_message = ('Tags have been added!\n\n'
-                          + 'New tags: ' + ', '.join(added_tags))
+                          + 'New tags: ' + ', '.join(sorted(added_tags)))
     else:
         result_message = 'No new tags have been added.'
 
     message.reply_text(
         result_message + '\n\n'
-        + 'Current tags: ' + ', '.join(current_tags)
+        + 'Current tags: ' + ', '.join(sorted(current_tags))
     )
