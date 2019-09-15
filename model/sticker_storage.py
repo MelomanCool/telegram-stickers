@@ -285,12 +285,13 @@ class SqliteStickerStorage(StickerStorage):
         if from_user_id != self.get_by_file_id(old_file_id).owner_id:
             raise Unauthorized
 
-        self.connection.execute(
-            'UPDATE stickers'
-            ' SET file_id = :new_file_id'
-            ' WHERE file_id = :old_file_id',
-            {'new_file_id': new_file_id, 'old_file_id': old_file_id}
-        )
+        with self.connection:
+            self.connection.execute(
+                'UPDATE stickers'
+                ' SET file_id = :new_file_id'
+                ' WHERE file_id = :old_file_id',
+                {'new_file_id': new_file_id, 'old_file_id': old_file_id}
+            )
 
     def has_sticker_with_file_id(self, file_id) -> bool:
         row = self.connection.execute(
