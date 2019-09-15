@@ -55,7 +55,7 @@ def inlinequery(_, update):
 
     have_next_page = bool(len(stickers) - offset > PAGE_SIZE)
     next_offset=str(offset+PAGE_SIZE) if have_next_page else ''
-    logger.info('Query: %s, stickers: %s, offset: %d, has next page: %d, next offset: %s',
+    logger.info('Query: %s, stickers: %s, offset: %d, has next page: %s, next offset: %s',
                 query, len(stickers), offset, have_next_page, next_offset)
 
     results = [
