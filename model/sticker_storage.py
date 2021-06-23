@@ -3,6 +3,7 @@ import re
 import sqlite3
 from abc import ABC, abstractmethod
 from typing import List, Union
+import random
 
 import config
 from tag_search import find_stickers
@@ -106,6 +107,10 @@ class StickerStorage(ABC):
             [s for s in self.get_all(tagged=True)
              if len(s.tags) != 0]
         )
+
+    def random(self) -> List[Sticker]:
+        stickers = self.get_all()
+        return random.sample(stickers, k=len(stickers))
 
     def _convert_to_tagged(self, sticker):
         return TaggedSticker(

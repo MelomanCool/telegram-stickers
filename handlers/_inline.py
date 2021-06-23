@@ -40,7 +40,9 @@ def inlinequery(_, update):
     offset = int(inl_q.offset) if inl_q.offset else 0
 
     if offset == 0 or query not in large_results:
-        if query:
+        if query == 'random':
+            stickers = sticker_storage.random()
+        elif query:
             stickers = sticker_storage.find(query)
         else:
             stickers = sticker_storage.get_most_popular()
